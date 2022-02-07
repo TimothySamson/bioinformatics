@@ -1,4 +1,4 @@
-from course2.week1 import PrintAdjacencyList, KmerToDeBruijn, PathToGenome
+from course2.week1 import PrintAdjacencyList, KmerToDeBruijn, PathToGenome, nbits
 import re
 from copy import deepcopy
 import itertools
@@ -68,9 +68,11 @@ def DegreeList(adjList):
 
 def EulerianPath(adjList):
     # Figure out end and start node
+    adjList = deepcopy(adjList)
     degree = DegreeList(adjList)
     for node in adjList.keys():
         diff = degree[node]["out"] - degree[node]["in"]
+        # print(node, diff)
         if diff == 1:
             start = node
         if diff == -1:
@@ -96,6 +98,50 @@ def EulerianPath(adjList):
     cycle.pop()
     return cycle
 
+def CircularUniversalString(k):
+    bits = nbits(k)
+    adjList = KmerToDeBruijn(bits)
+    return PathToGenome(EulerianCycle(adjList, "0"*(k-1)))[:-k+1]
+
+def PairedPathToGenome(path, d):
+    k = len(path[0][0])
+    leftReads = [read[0] for read in path]
+    rightReads = [read[1] for read in path]
+    prefix = leftReads[0] + "".join([read[-1] for read in leftReads[1:]])
+    suffix = rightReads[0] + "".join([read[-1] for read in rightReads[1:]])
+
+    leftOverlap = prefix[k+d:]
+    rightOverlap = suffix[:-k-d]
+
+    print(prefix)
+    print(" " * (k + d) + suffix)
+
+    assert leftOverlap == rightOverlap, "no genome spelled by gapped pairs"
+
+    return prefix + suffix[len(leftOverlap):]
+
+def ReadPairAdjacencyList(reads):
+    adjList = {(read[0][:-1], read[1][:-1]): [] for read in reads}
+
+    for read in reads:
+        suffix = (read[0][1:], read[1][1:])
+        prefix = (read[0][:-1], read[1][:-1])
+        adjList[prefix].append(suffix)
+        if suffix not in adjList:
+            adjList[suffix] = []
+
+    return adjList
+
+# def MaximalNonBranchingPaths(graph):
+#     graph = deepcopy(graph)
+#     degree = DegreeList(graph)
+#
+#     for node in graph.keys():
+#         if degree[node] != {"out": 1, "in", 1}:
+#
+#
+
+
 
 if __name__ == "__main__":
     # with open("dataset_203_6.txt") as file:
@@ -104,10 +150,27 @@ if __name__ == "__main__":
     #
     #     print(*res, sep="->")
 
-    with open("dataset_203_7.txt") as file:
-        adjList = KmerToDeBruijn([line.strip() for line in file.readlines()])
-        res = EulerianPath(adjList)
-        print(PathToGenome(res))
+    # with open("dataset_203_7.txt") as file:
+    #     adjList = KmerToDeBruijn([line.strip() for line in file.readlines()])
+    #     res = EulerianPath(adjList)
+    #     print(PathToGenome(res))
+
+    # with open("dataset_6206_4.txt") as file:
+    #     path = [read.strip().split("|") for read in file.readlines()]
+    #     print(PairedPathToGenome(path, 200))
+
+    # with open("dataset_204_16.txt") as file:
+    #     pairs = [read.strip().split("|") for read in file.readlines()]
+    #     d = 200
+    #     adjList = ReadPairAdjacencyList(pairs, d)
+    #     print(PairedPathToGenome(EulerianPath(adjList), d+1))
+
+    with open("input.txt") as file:
+        pairs = [read.strip().split("|") for read in file.readlines()]
+        adjList = ReadPairAdjacencyList(pairs)
+        PrintAdjacencyList(adjList)
+        print(PairedPathToGenome(EulerianPath(adjList), 2))
+
 
 
 
