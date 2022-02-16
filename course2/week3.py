@@ -36,6 +36,7 @@ def ReverseComplementRna(rna):
     text = rna.translate(transTable)
     return text[::-1]
 
+# Takes in RNA, returns protein
 def ProteinTranslate(string, stopAsX=False):
   codons = []
   for i in range(0, len(string), 3):
@@ -176,13 +177,13 @@ if __name__ == "__main__":
     #     "1042 1054 1063 1072 1079 1079 1118 1129 1151 " \
     #     "1155 1168 1171 1176 1178 1183 1200 1226 1265 1265 " \
     #     "1275 1283 1284 1297 1298 1299 1313 1315 1412".split(" ")
-    with open("dataset_100_6.txt") as file:
-        a = CyclopeptideSequencing(list(map(int, file.readline().strip().split(" "))))
-        b = [(aminoMass[acid] for acid in peptide) for peptide in a]
-        b = set(b)
-
-        for weightSet in b:
-            print(*weightSet, end=" ", sep="-")
+    # with open("dataset_100_6.txt") as file:
+    #     a = CyclopeptideSequencing(list(map(int, file.readline().strip().split(" "))))
+    #     b = [(aminoMass[acid] for acid in peptide) for peptide in a]
+    #     b = set(b)
+    #
+    #     for weightSet in b:
+    #         print(*weightSet, end=" ", sep="-")
     # print([[PeptideMass(acid) for acid in peptide]
     #                           for peptide in CyclopeptideSequencing(list(map(int, a)))])
 
@@ -192,4 +193,16 @@ if __name__ == "__main__":
     # a = list(Spectrum("NQEL"))
     # a.sort()
     # print(a)
+
+    # a = list(Spectrum("IQADNKIERIDRCTEQPVIHVFNKANRQAWMIIMGF", cyclic=False))
+    # a.sort()
+    # print(*a)
+
+    print(ProteinTranslate("CCAAGAACAGAUAUCAAU"))
+
+    a = list(map(int, "0 71 99 101 103 128 129 199 200 204 227 230 231 298 303 328 330 332 333".split(" ")))
+    print([isSubset(Spectrum(peptide, cyclic=False), a) for peptide in [
+        "TVQ", "QCV", "ETC", "TCQ", "TCE", "AVQ"
+    ]])
+
 
