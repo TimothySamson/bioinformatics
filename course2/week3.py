@@ -22,10 +22,6 @@ aminos = list(set(amino.values()))
 aminoMass = {"G": 57, "A": 71 , "S": 87 , "P": 97 , "V": 99 , "T": 101, "C": 103, "I": 113, "L": 113, "N": 114,
         "D": 115,  "K": 128,  "Q": 128,  "E": 129,  "M": 131,  "H": 137,  "F": 147,  "R": 156,  "Y": 163,  "W": 186}
 
-
-
-
-
 def DnaToRna(dna):
     transTable = dna.maketrans("tTuU", "uUuU")
     text = dna.translate(transTable)
@@ -148,6 +144,7 @@ def CyclopeptideSequencing(spectrum):
             elif not isSubset(Spectrum(peptide, cyclic=False), spectrum):
                 candidatePeptides.remove(peptide)
     return finalPeptides
+
 
 
 if __name__ == "__main__":
