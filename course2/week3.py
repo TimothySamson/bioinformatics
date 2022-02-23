@@ -2,25 +2,25 @@ import itertools
 from copy import deepcopy
 
 amino = {"UUU":"F", "UUC":"F", "UUA":"L", "UUG":"L",
-    "UCU":"S", "UCC":"S", "UCA":"S", "UCG":"S",
-    "UAU":"Y", "UAC":"Y", "UAA":"X", "UAG":"X",
-    "UGU":"C", "UGC":"C", "UGA":"X", "UGG":"W",
-    "CUU":"L", "CUC":"L", "CUA":"L", "CUG":"L",
-    "CCU":"P", "CCC":"P", "CCA":"P", "CCG":"P",
-    "CAU":"H", "CAC":"H", "CAA":"Q", "CAG":"Q",
-    "CGU":"R", "CGC":"R", "CGA":"R", "CGG":"R",
-    "AUU":"I", "AUC":"I", "AUA":"I", "AUG":"M",
-    "ACU":"T", "ACC":"T", "ACA":"T", "ACG":"T",
-    "AAU":"N", "AAC":"N", "AAA":"K", "AAG":"K",
-    "AGU":"S", "AGC":"S", "AGA":"R", "AGG":"R",
-    "GUU":"V", "GUC":"V", "GUA":"V", "GUG":"V",
-    "GCU":"A", "GCC":"A", "GCA":"A", "GCG":"A",
-    "GAU":"D", "GAC":"D", "GAA":"E", "GAG":"E",
-    "GGU":"G", "GGC":"G", "GGA":"G", "GGG":"G"}
+         "UCU":"S", "UCC":"S", "UCA":"S", "UCG":"S",
+         "UAU":"Y", "UAC":"Y", "UAA":"X", "UAG":"X",
+         "UGU":"C", "UGC":"C", "UGA":"X", "UGG":"W",
+         "CUU":"L", "CUC":"L", "CUA":"L", "CUG":"L",
+         "CCU":"P", "CCC":"P", "CCA":"P", "CCG":"P",
+         "CAU":"H", "CAC":"H", "CAA":"Q", "CAG":"Q",
+         "CGU":"R", "CGC":"R", "CGA":"R", "CGG":"R",
+         "AUU":"I", "AUC":"I", "AUA":"I", "AUG":"M",
+         "ACU":"T", "ACC":"T", "ACA":"T", "ACG":"T",
+         "AAU":"N", "AAC":"N", "AAA":"K", "AAG":"K",
+         "AGU":"S", "AGC":"S", "AGA":"R", "AGG":"R",
+         "GUU":"V", "GUC":"V", "GUA":"V", "GUG":"V",
+         "GCU":"A", "GCC":"A", "GCA":"A", "GCG":"A",
+         "GAU":"D", "GAC":"D", "GAA":"E", "GAG":"E",
+         "GGU":"G", "GGC":"G", "GGA":"G", "GGG":"G"}
 
 aminos = list(set(amino.values()))
 aminoMass = {"G": 57, "A": 71 , "S": 87 , "P": 97 , "V": 99 , "T": 101, "C": 103, "I": 113, "L": 113, "N": 114,
-        "D": 115,  "K": 128,  "Q": 128,  "E": 129,  "M": 131,  "H": 137,  "F": 147,  "R": 156,  "Y": 163,  "W": 186}
+             "D": 115,  "K": 128,  "Q": 128,  "E": 129,  "M": 131,  "H": 137,  "F": 147,  "R": 156,  "Y": 163,  "W": 186}
 
 def DnaToRna(dna):
     transTable = dna.maketrans("tTuU", "uUuU")
@@ -34,13 +34,13 @@ def ReverseComplementRna(rna):
 
 # Takes in RNA, returns protein
 def ProteinTranslate(string, stopAsX=False):
-  codons = []
-  for i in range(0, len(string), 3):
-    codon = amino[string[i: i+3]]
-    if codon == "X" and not stopAsX:
-      break
-    codons.append(codon)
-  return "".join(codons)
+    codons = []
+    for i in range(0, len(string), 3):
+        codon = amino[string[i: i+3]]
+        if codon == "X" and not stopAsX:
+            break
+        codons.append(codon)
+    return "".join(codons)
 
 def PeptideEncoding(dna, peptide):
     subdnas = []
@@ -87,33 +87,33 @@ def CountPeptides(mass):
 
 def Spectrum(peptide, cyclic=True):
     n = len(peptide)
-
     yield 0
 
     # accessible until n
-    prefixMass = [0] + list(itertools.accumulate([aminoMass[acid] for acid in peptide]))
+    prefixMass = [0] + list(itertools.accumulate(peptide))
 
     peptideMass = prefixMass[-1]
     for i in range(n):
         for j in range(i+1, n+1):
             middleMass = prefixMass[j] - prefixMass[i]
-
             yield middleMass
-
             if i != 0 and j != n and cyclic:
                 yield peptideMass - middleMass
 
 def isSubset(subset, parent):
-  parent = deepcopy(parent)
-  for elem in subset:
-    if elem in parent:
-      parent.remove(elem)
-    else:
-      return False
-  return True
+    parent = deepcopy(parent)
+    for elem in subset:
+        if elem in parent:
+            parent.remove(elem)
+        else:
+            return False
+    return True
 
-def PeptideMass(peptide):
-  return sum([aminoMass[acid] for acid in peptide])
+def PeptideMass(peptide, extended):
+    if not extended:
+        return sum([aminoMass[acid] for acid in peptide])
+    else:
+        return sum(peptide)
 
 def CyclopeptideSequencing(spectrum):
     aminos = aminoMass.keys()

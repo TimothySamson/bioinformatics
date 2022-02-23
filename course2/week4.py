@@ -1,43 +1,54 @@
 import numpy as np
 # import pandas as pd
-from week3 import Spectrum, aminoMass, PeptideMass
+from week3 import Spectrum, aminoMass
 
 def PeptideScore(peptide, spectrum, cyclic=True):
-    theoretical = np.array(list(Spectrum(peptide, cyclic=cyclic)))
-    a, b = np.unique(theoretical, return_counts=True)
+    a, b = np.unique(list(Spectrum(peptide, cyclic=cyclic)),
+                     return_counts=True)
     c, d = np.unique(spectrum, return_counts=True)
     theoreticalCounts = dict(zip(a, b))
     experimentalCounts = dict(zip(c, d))
-
-    return sum([min(freq, theoreticalCounts[weight]) for weight, freq in experimentalCounts.items()
-                                                     if weight in theoreticalCounts])
+    return sum([
+        min(freq, theoreticalCounts[weight])
+        for weight, freq in experimentalCounts.items()
+        if weight in theoreticalCounts
+    ])
 
 def Trim(leaderboard, spectrum, N):
-    leaderScores = np.array([(peptide, PeptideScore(peptide, spectrum, cyclic=False)) for peptide in leaderboard],
-                            dtype=[("peptide", object), ("score", int)])
-    return [x[0] for x in np.sort(leaderScores, order="score")[::-1][:N]]
+    if len(leaderboard) <= N:
+        return leaderboard
 
-def LeaderboardCyclopeptideSequencing(spectrum, N):
-    leaderboard = [""]
+    leaderboard = np.array(leaderboard)
+    leaderScores = np.array(
+        [PeptideScore(peptide, spectrum, cyclic=False) for peptide in leaderboard]
+    )
+
+    upToScore = leaderScores[np.argsort(-leaderScores)][N-1]
+    return list(tuple(x) for x in leaderboard[leaderScores >= upToScore])
+
+
+def LeaderboardCyclopeptideSequencing(spectrum, N, extended=False):
+    leaderboard = [()]
+    if not extended:
+        aminos = list(set(aminoMass.values()))
+    else:
+        aminos = list(range(57, 200 + 1))
+
     finalists = []
-
     realMass = spectrum[-1]
-    aminos = list(aminoMass.keys())
 
     while leaderboard:
-        leaderboard = [
-            previous + acid for acid in aminos for previous in leaderboard
-        ]
+        leaderboard = [previous + (acid,) for acid in aminos for previous in leaderboard]
 
         leaderboard = Trim(leaderboard, spectrum, N)
-        print(f"{max([PeptideMass(peptide) for peptide in leaderboard])} of {realMass}")
 
         for peptide in leaderboard.copy():
-            if PeptideMass(peptide) > realMass:
+            if sum(peptide) > realMass:
                 leaderboard.remove(peptide)
-            elif PeptideMass(peptide) == realMass:
+            elif sum(peptide) == realMass:
                 finalists.append(peptide)
-                leaderboard.remove(peptide)
+        if leaderboard:
+            print(f"{max([sum(peptide) for peptide in leaderboard])} of {realMass}")
 
     return finalists
 
@@ -55,15 +66,46 @@ if __name__ == "__main__":
     #     N = int(file.readline().strip())
     #     print(*[x[0] for x in Trim(leaderboard, spectrum, N)])
 
-    with open("dataset_102_8.txt") as file:
-        N = int(file.readline())
-        spectrum = np.array(file.readline().strip().split(" ")).astype(int)
+    # with open("dataset_102_8.txt") as file:
+    #     N = int(file.readline())
+    #     spectrum = np.array(file.readline().strip().split(" ")).astype(int)
+    #
+    #     res = np.array(LeaderboardCyclopeptideSequencing(spectrum, N))
+    #     scores = np.array([PeptideScore(peptide, spectrum, cyclic=True) for peptide in res])
+    #     res = res[scores == max(scores)]
+    #     for weight in res:
+    #         print(*weight, end=" ", sep="-")
 
-        res = LeaderboardCyclopeptideSequencing(spectrum, N)
-        print(res)
-        weights = set([(aminoMass[acid] for acid in peptide) for peptide in res])
-        for weight in weights:
-            print(list(weight))
-            print(*list(weight), end=" ", sep="-")
+    # with open("dataset_103_2.txt") as file:
+    #     N = int(file.readline().strip())
+    #
+    #     spectrum = np.array(file.readline().strip().split(" ")).astype(int)
+    #
+    #     for peptide in LeaderboardCyclopeptideSequencing(spectrum, N, extended=True):
+    #         print(*peptide, sep="-", end=" ")
+
+    # with open("input.txt") as file, open("dataset_103_2.txt") as spectrum:
+    #     N = int(spectrum.readline().strip())
+    #     spectrum = np.array(spectrum.readline().strip().split(" ")).astype(int)
+    #
+    #     peptides = np.array([tuple(map(int, peptide.split("-"))) for peptide in file.readline().strip().split(" ")])
+    #     pepScores = [PeptideScore(peptide, spectrum, cyclic=False, extended=True) for peptide in peptides]
+    #     pepScores = np.array(pepScores)
+    #
+    #     print(len(peptides[pepScores == max(pepScores)]))
+    #     print(pepScores)
+
+    spectrum = "0 97 99 113 114 115 128 128 147 147 163 186 227 241 242 244 244 256 260 261 262 283 291 309 330 333 340 347 385 388 389 390 390 405 435 447 485 487 503 504 518 544 552 575 577 584 599 608 631 632 650 651 653 672 690 691 717 738 745 770 779 804 818 819 827 835 837 875 892 892 917 932 932 933 934 965 982 989 1039 1060 1062 1078 1080 1081 1095 1136 1159 1175 1175 1194 1194 1208 1209 1223 1322"
+    spectrum = np.array(spectrum.split(" ")).astype(int)
+
+    peptides = np.array(LeaderboardCyclopeptideSequencing(spectrum, 1000))
+    peptideScores = np.array([PeptideScore(peptide, spectrum) for peptide in peptides])
+
+    peptides = peptides[peptideScores == max(peptideScores)]
+    print(peptides)
+    print(len(peptides))
+
+
+
 
 
